@@ -1,50 +1,39 @@
-from django.shortcuts import render
 from rest_framework import generics
-from .models import Devedor
-from django.http import JsonResponse
-from rest_framework.decorators import api_view
-from .models import Devedor
-from django.views.decorators.csrf import csrf_exempt
-import json
+from .serializers import *
+from .models import *
 
-from .serializer import DevedorCadastroSerialzer
-from rest_framework.response import Response
-from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema
 
-@csrf_exempt  # Para desativar a proteção CSRF (não recomendado em produção)
-@api_view(['GET', 'POST'])
-def devedor_list(request):
-    if request.method == 'GET':
-        devedores = list(Devedor.objects.values())
-        return JsonResponse(devedores, safe=False)
+class DevedorList(generics.ListCreateAPIView):
+    queryset = Devedor.objects.all()
+    serializer_class = DevedorSerializer
 
-    elif request.method == 'POST':
-        data = json.loads(request.body)
-        devedor = Devedor.objects.create(**data)
-        return JsonResponse({'id': devedor.devedor_id}, status=201)
+class DevedorDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Devedor.objects.all()
+    serializer_class = DevedorSerializer
 
-@csrf_exempt
-@api_view(['GET', 'PUT', 'DELETE'])
-def devedor_detail(request, pk):
-    try:
-        devedor = Devedor.objects.get(devedor_id=pk)
-    except Devedor.DoesNotExist:
-        return JsonResponse({'error': 'Devedor não encontrado.'}, status=404)
+class ContaList(generics.ListCreateAPIView):
+    queryset = Conta.objects.all()
+    serializer_class = ContaSerializer
 
-    if request.method == 'GET':
-        return JsonResponse({'id': devedor.devedor_id, 'indice_reputacao': devedor.indice_reputacao, 'lead': devedor.lead})
+class ContaDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Conta.objects.all()
+    serializer_class = ContaSerializer
 
-    elif request.method == 'PUT':
-        data = json.loads(request.body)
-        devedor.indice_reputacao = data.get('indice_reputacao', devedor.indice_reputacao)
-        devedor.lead = data.get('lead', devedor.lead)
-        devedor.save()
-        return JsonResponse({'message': 'Devedor atualizado.'})
+class CredorList(generics.ListCreateAPIView):
+    queryset = Credor.objects.all()
+    serializer_class = CredorSerializer
 
-    elif request.method == 'DELETE':
-        devedor.delete()
-        return JsonResponse({'message': 'Devedor deletado.'})
+class CredorDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Credor.objects.all()
+    serializer_class = CredorSerializer
+
+class PagamentoList(generics.ListCreateAPIView):
+    queryset = Pagamento.objects.all()
+    serializer_class = PagamentoSerializer
+
+class PagamentoDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Pagamento.objects.all()
+    serializer_class = PagamentoSerializer
 
 ##Métodos de exemplo usando as conveções
 # Classe para listar e criar novos devedores
