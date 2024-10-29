@@ -1,11 +1,11 @@
-from django.shortcuts import render
-from rest_framework import generics
-from .models import Devedor
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from .models import Devedor
+from .models import *
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.views import View
+from django.contrib.auth.hashers import make_password
+
 
 @csrf_exempt  # Para desativar a proteção CSRF (não recomendado em produção)
 @api_view(['GET', 'POST'])
@@ -40,3 +40,33 @@ def devedor_detail(request, pk):
     elif request.method == 'DELETE':
         devedor.delete()
         return JsonResponse({'message': 'Devedor deletado.'})
+
+@csrf_exempt
+@api_view(['GET', 'POST'])
+def credor_view(request):
+    if request.method == 'GET':
+        users = Credor.objects.values()
+        return JsonResponse(list(users), safe=False)
+
+    elif request.method == 'POST':
+        data = json.loads(request.body)
+
+        # Validação simplificada
+        if not all(key in data for key in ('cnpj', 'razao_social', 'nome_fantasia', 'email', 'password')):
+            return JsonResponse({'error': 'Faltam campos obrigatórios.'}, status=400)
+
+        try:
+            # Criação do usuário
+            user = Credor.objects.create(
+                cnpj=data['cnpj'],
+                razao_social=data['razao_social'],
+                nome_fantasia=data['nome_fantasia'],
+                email=data['email'],
+                password=make_password(data['password'])  # Criptografar a senha
+            )
+            user_data = {
+                'credor_id': user.credor_id,
+            }
+            return JsonResponse(user_data, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
