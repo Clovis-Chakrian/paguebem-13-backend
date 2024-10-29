@@ -7,6 +7,11 @@ from .models import Devedor
 from django.views.decorators.csrf import csrf_exempt
 import json
 
+from .serializer import DevedorCadastroSerialzer
+from rest_framework.response import Response
+from rest_framework import status
+from drf_yasg.utils import swagger_auto_schema
+
 @csrf_exempt  # Para desativar a proteção CSRF (não recomendado em produção)
 @api_view(['GET', 'POST'])
 def devedor_list(request):
@@ -40,3 +45,20 @@ def devedor_detail(request, pk):
     elif request.method == 'DELETE':
         devedor.delete()
         return JsonResponse({'message': 'Devedor deletado.'})
+
+
+@csrf_exempt  # Para desativar a proteção CSRF (não recomendado em produção)
+@swagger_auto_schema(method='POST', request_body=DevedorCadastroSerialzer)
+@api_view(['GET', 'POST'])
+def devedor_list_2(request):
+    if request.method == 'GET':
+        devedores = Devedor.objects.all()
+        serializer = DevedorCadastroSerialzer(devedores, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = DevedorCadastroSerialzer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
