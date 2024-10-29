@@ -45,3 +45,30 @@ class Credor(AbstractBaseUser):
     def __str__(self):
         return self.email
 #---------------------------Fim Usuário---------------------------------------
+
+class Conta(models.Model):
+    conta_id = models.AutoField(primary_key=True)
+    devedor = models.ForeignKey(Devedor, on_delete=models.CASCADE)
+    credor = models.ForeignKey(Credor, on_delete=models.CASCADE)
+    valor_total = models.DecimalField(max_digits=30, decimal_places=2)
+    numero_parcelas = models.IntegerField()
+
+    def _str_(self):
+        return f'Conta {self.conta_id} - Valor Total: {self.valor_total}'
+
+
+class Pagamento(models.Model):
+    pagamento_id = models.AutoField(primary_key=True)
+    conta = models.ForeignKey(Conta, on_delete=models.CASCADE)
+    numero_parcela = models.IntegerField()
+    numero_documento = models.IntegerField()
+    vencimento = models.DateField()
+    data_pagamento = models.DateField(null=True, blank=True)
+    tempo_para_pagar = models.IntegerField()
+    valor_pagamento = models.DecimalField(max_digits=30, decimal_places=2)
+    valor_pago = models.DecimalField(max_digits=30, decimal_places=2)
+    diferenca_valores = models.DecimalField(max_digits=30, decimal_places=2)
+    lead = models.IntegerField()
+
+    def _str_(self):
+        return f'Pagamento {self.pagamento_id} - Parcela: {self.numero_parcela}'
