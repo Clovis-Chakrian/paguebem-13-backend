@@ -28,5 +28,5 @@ DATABASES = {
 
 7. Rodar o projeto: 
   -  Entrar no diretório do manage.py (cd PagueBem_ML\manage.py)
-  -  manage.py runserver
+  -  python manage.py runserver
 
