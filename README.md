@@ -26,7 +26,9 @@ DATABASES = {
     }
 }
 
-7. Rodar o projeto: 
+7. Rodar o projeto:
   -  Entrar no diretório do manage.py (cd PagueBem_ML\manage.py)
+  -  python manage.py makemagrations
+  -  python manage.py migrate
   -  python manage.py runserver
 
