@@ -1,6 +1,7 @@
 from rest_framework import generics
 from ..serializers import *
 from ..models import *
+from .indices_view import IndicePagamentoView
 
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
@@ -35,6 +36,13 @@ class CredorDetail(generics.RetrieveUpdateDestroyAPIView):
 class PagamentoList(generics.ListCreateAPIView):
     queryset = Pagamento.objects.all()
     serializer_class = PagamentoSerializer
+    def perform_create(self, serializer):
+            # Salva o novo pagamento
+            pagamento = serializer.save()
+            
+            # Chama o método que está em PagamentoDetail para realizar uma ação
+            indice_pagamento = IndicePagamentoView()
+            indice_pagamento.calcular_indice_pagamento(pagamento)    
 
 class PagamentoDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pagamento.objects.all()
@@ -53,60 +61,6 @@ class ExampleDetail(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'devedor_id'  # Especifica o campo 'devedor_id' para busca
 
 
-@swagger_auto_schema(method='POST', request_body=DevedorCadastroSerialzer) #para sinalizar para o swagger que função mapeia métodos post e qual parametro o body precisa para criação
-@api_view(['GET', 'POST'])
-def devedor_list_2(request):
-    if request.method == 'GET':
-        devedores = Devedor.objects.all()
-        serializer = DevedorCadastroSerialzer(devedores, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        serializer = DevedorCadastroSerialzer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
 # @csrf_exempt  # Para desativar a proteção CSRF (não recomendado em produção)
 # @swagger_auto_schema(method='POST', request_body=DevedorCadastroSerialzer) #para sinalizar para o swagger que função mapeia métodos post e qual parametro o body precisa para criação
 # @api_view(['GET', 'POST'])
-# def devedor_list_2(request):
-#     if request.method == 'GET':
-#         devedores = Devedor.objects.all()
-#         serializer = DevedorCadastroSerialzer(devedores, many=True)
-#         return Response(serializer.data)
-
-#     elif request.method == 'POST':
-#         serializer = DevedorCadastroSerialzer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# @csrf_exempt
-# @swagger_auto_schema(method='put', request_body=DevedorCadastroSerialzer)
-# @api_view(['GET', 'PUT', 'DELETE'])
-# def devedor_detail_2(request, id):
-#     try:
-#         devedor = Devedor.objects.get(devedor_id=id)
-#     except Devedor.DoesNotExist:
-#         return Response(status=status.HTTP_404_NOT_FOUND)
-    
-#     if request.method == 'GET':
-#         serializer = DevedorCadastroSerialzer(devedor)
-#         return  Response(serializer.data, status=status.HTTP_200_OK)
-
-#     elif request.method == 'PUT':
-#         serializer = DevedorCadastroSerialzer(devedor, data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#     elif request.method == 'DELETE':
-#         devedor.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
