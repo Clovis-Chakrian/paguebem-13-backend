@@ -1,8 +1,6 @@
 from django.urls import path
 from .views.views import *
-from .views import *
 from .views.indices_view import *
-from .views.indice_regularidade_view import *
 
 urlpatterns = [
 
