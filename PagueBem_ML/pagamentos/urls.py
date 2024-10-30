@@ -1,10 +1,13 @@
 from django.urls import path
 from .views.views import *
+from .views import *
 from .views.indices_view import *
 from .views.views import PagamentoList, PagamentoDetail
 
-
 urlpatterns = [
+
+    path('login/', LoginView.as_view(), name='login'),
+
     path('exemplo/', ExampleList.as_view(), name='exemplo-list'),
     path('exemplo/<int:devedor_id>/', ExampleDetail.as_view(), name='exemplo-detail'),
 

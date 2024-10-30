@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from .models import *
 
+class LoginSerializer(serializers.Serializer):
+    class Meta:
+        fields = ['email', 'password']
+        read_only_fields = ['password'] 
+        
 class DevedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Devedor
@@ -18,11 +23,11 @@ class ContaSerializer(serializers.ModelSerializer):
 class CredorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Credor
-        fields = ['credor_id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'password', 'is_active']
+        fields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'password', 'is_active']
         extra_kwargs = {
             'password': {'write_only': True}, 
         }
-        read_only_fields = ['credor_id']
+        read_only_fields = ['id']
 
     def create(self, validated_data):
         # Cria o credor usando o manager
