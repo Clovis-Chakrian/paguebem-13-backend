@@ -2,6 +2,8 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
+    path('login/', LoginView.as_view(), name='login'),
+
     path('devedores/', DevedorList.as_view(), name='devedor-list'),
     path('devedores/<int:pk>/', DevedorDetail.as_view(), name='devedor-detail'),
 
