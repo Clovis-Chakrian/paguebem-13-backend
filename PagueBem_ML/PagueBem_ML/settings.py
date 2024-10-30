@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
-    "pagamentos"
+    "pagamentos",
+     "drf_yasg"
 ]
 
 REST_FRAMEWORK = {
@@ -48,6 +49,14 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'pagamentos.Credor'
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Basic': {
+            'type': 'basic'
+        }
+    }
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -89,17 +98,6 @@ WSGI_APPLICATION = "PagueBem_ML.wsgi.application"
 #        "NAME": BASE_DIR / "db.sqlite3",
 #    }
 #}
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres.ixmetgvxvyzxnmqcuonf',
-        'PASSWORD': 'GustavoFBS@#1630',
-        'HOST': 'aws-0-us-west-1.pooler.supabase.com', 
-        'PORT': '6543'
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

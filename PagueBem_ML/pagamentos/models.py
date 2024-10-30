@@ -52,7 +52,7 @@ class Conta(models.Model):
     credor = models.ForeignKey(Credor, on_delete=models.CASCADE)
     valor_total = models.DecimalField(max_digits=30, decimal_places=2)
     numero_parcelas = models.IntegerField()
-
+    
     def _str_(self):
         return f'Conta {self.conta_id} - Valor Total: {self.valor_total}'
 
