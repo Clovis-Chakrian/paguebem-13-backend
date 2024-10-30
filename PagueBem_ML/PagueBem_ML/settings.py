@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,9 +37,18 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
     "pagamentos",
-    "drf_yasg",
+     "drf_yasg"
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+AUTH_USER_MODEL = 'pagamentos.Credor'
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
@@ -90,8 +98,6 @@ WSGI_APPLICATION = "PagueBem_ML.wsgi.application"
 #        "NAME": BASE_DIR / "db.sqlite3",
 #    }
 #}
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
