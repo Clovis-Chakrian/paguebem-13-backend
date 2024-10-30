@@ -1,4 +1,6 @@
-from .views import *
+from django.urls import path
+from .views.views import *
+from .views.indices_view import *
 
 urlpatterns = [
     path('exemplo/', ExampleList.as_view(), name='exemplo-list'),
@@ -15,4 +17,10 @@ urlpatterns = [
 
     path('pagamentos/', PagamentoList.as_view(), name='pagamento-list'),
     path('pagamentos/<int:pk>/', PagamentoDetail.as_view(), name='pagamento-detail'),
+
+     # Endpoint para obter o índice de todos os devedores (GET)
+    path('indice-pagamento/', IndicePagamentoView.as_view(), name='indice_pagamento_todos'),
+    
+    # Endpoint para registrar um novo pagamento (POST) e obter o índice de um devedor específico (GET)
+    path('indice-pagamento/<int:devedor_id>/', IndicePagamentoView.as_view(), name='indice_pagamento_devedor'),
 ]
