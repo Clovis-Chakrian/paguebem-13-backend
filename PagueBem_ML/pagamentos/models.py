@@ -28,7 +28,7 @@ class CredorManager(BaseUserManager):
         return user
 
 class Credor(AbstractBaseUser):
-    credor_id = models.AutoField(primary_key=True)  # Automaticamente gerado
+    id = models.AutoField(primary_key=True)  # Automaticamente gerado
     cnpj = models.CharField(max_length=18, unique=True)
     razao_social = models.CharField(max_length=255)
     nome_fantasia = models.CharField(max_length=255)
