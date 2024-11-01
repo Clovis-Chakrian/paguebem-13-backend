@@ -12,14 +12,6 @@ class DevedorSerializer(serializers.ModelSerializer):
         fields = ['devedor_id', 'indice_reputacao', 'lead']
         read_only_fields = ['devedor_id'] 
 
-
-class ContaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Conta
-        fields = ['conta_id', 'devedor', 'credor', 'valor_total', 'numero_parcelas']
-        read_only_fields = ['conta_id']
-
-
 class CredorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Credor
@@ -39,7 +31,8 @@ class PagamentoSerializer(serializers.ModelSerializer):
         model = Pagamento
         fields = [
             'pagamento_id', 
-            'conta', 
+            'Credor', 
+            'Devedor', 
             'numero_parcela', 
             'numero_documento', 
             'vencimento', 
