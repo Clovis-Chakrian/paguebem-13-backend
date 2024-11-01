@@ -25,9 +25,8 @@ urlpatterns = [
     #path('indice-pagamento/', IndicePagamentoView.as_view(), name='indice_pagamento_todos'),
     
     # Endpoint para registrar um novo pagamento (POST) e obter o índice de um devedor específico (GET)
-    #path('indice-pagamento/<int:devedor_id>/', IndicePagamentoView.as_view(), name='indice_pagamento_devedor'),
+    path('indice-pagamento/<int:devedor_id>/', IndicePagamentoView.as_view(), name='indice_pagamento_devedor'),
 
-    #path('indice-regularidade/', IndiceRegularidadeView.as_view(), name='indice-regularidade'),
-    #path('indice-regularidade/<int:devedor_id>/', IndiceRegularidadeView.as_view(), #name='indice-regularidade-devedor'),
-    
+    path('indice-regularidade/', IndiceRegularidadeView.as_view(), name='indice-regularidade'),
+    path('indice-regularidade/<int:devedor_id>/', IndiceRegularidadeView.as_view(), name='indice-regularidade-devedor'),
 ]

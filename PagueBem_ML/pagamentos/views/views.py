@@ -29,7 +29,7 @@ class LoginView(APIView):
             }, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "Credenciais inválidas."}, status=status.HTTP_401_UNAUTHORIZED)
-
+        
 class DevedorList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated] #Exemplo de autenticação
     queryset = Devedor.objects.all()
