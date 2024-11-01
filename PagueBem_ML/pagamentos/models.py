@@ -45,21 +45,10 @@ class Credor(AbstractBaseUser):
     def __str__(self):
         return self.email
 #---------------------------Fim Usuário---------------------------------------
-
-class Conta(models.Model):
-    conta_id = models.AutoField(primary_key=True)
-    devedor = models.ForeignKey(Devedor, on_delete=models.CASCADE)
-    credor = models.ForeignKey(Credor, on_delete=models.CASCADE)
-    valor_total = models.DecimalField(max_digits=30, decimal_places=2)
-    numero_parcelas = models.IntegerField()
-    
-    def _str_(self):
-        return f'Conta {self.conta_id} - Valor Total: {self.valor_total}'
-
-
 class Pagamento(models.Model):
     pagamento_id = models.AutoField(primary_key=True)
-    conta = models.ForeignKey(Conta, on_delete=models.CASCADE)
+    Credor = models.ForeignKey(Credor, related_name="pagamentos", on_delete=models.CASCADE)
+    Devedor = models.ForeignKey(Devedor, on_delete=models.CASCADE)
     numero_parcela = models.IntegerField()
     numero_documento = models.IntegerField()
     vencimento = models.DateField()

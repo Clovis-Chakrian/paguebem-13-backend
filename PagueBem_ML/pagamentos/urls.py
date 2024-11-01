@@ -5,7 +5,7 @@ from .views.indices_view import *
 urlpatterns = [
 
     path('login/', LoginView.as_view(), name='login'),
-
+    
     path('exemplo/', ExampleList.as_view(), name='exemplo-list'),
     path('exemplo/<int:devedor_id>/', ExampleDetail.as_view(), name='exemplo-detail'),
 
@@ -15,12 +15,12 @@ urlpatterns = [
     path('credores/', CredorList.as_view(), name='credor-list'),
     path('credores/<int:pk>/', CredorDetail.as_view(), name='credor-detail'),
 
-    path('contas/', ContaList.as_view(), name='conta-list'),
-    path('contas/<int:pk>/', ContaDetail.as_view(), name='conta-detail'),
-
     path('pagamentos/', PagamentoList.as_view(), name='pagamento-list'),
     path('pagamentos/<int:pk>/', PagamentoDetail.as_view(), name='pagamento-detail'),
+    path('pagamentos/<str:email>/', PagamentoListCredor.as_view(), name='pagamento-detail'),
 
+
+    
      # Endpoint para obter o índice de todos os devedores (GET)
     path('indice-pagamento/', IndicePagamentoView.as_view(), name='indice_pagamento_todos'),
     
