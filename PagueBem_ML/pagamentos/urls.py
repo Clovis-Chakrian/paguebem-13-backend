@@ -6,8 +6,8 @@ urlpatterns = [
 
     path('login/', LoginView.as_view(), name='login'),
 
-    path('exemplo/', ExampleList.as_view(), name='exemplo-list'),
-    path('exemplo/<int:devedor_id>/', ExampleDetail.as_view(), name='exemplo-detail'),
+    # path('exemplo/', ExampleList.as_view(), name='exemplo-list'),
+    # path('exemplo/<int:devedor_id>/', ExampleDetail.as_view(), name='exemplo-detail'),
 
     path('devedores/', DevedorList.as_view(), name='devedor-list'),
     path('devedores/<int:pk>/', DevedorDetail.as_view(), name='devedor-detail'),

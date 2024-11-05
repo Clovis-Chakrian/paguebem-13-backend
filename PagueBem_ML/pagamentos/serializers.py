@@ -6,11 +6,6 @@ class LoginSerializer(serializers.Serializer):
         fields = ['email', 'password']
         read_only_fields = ['password'] 
         
-class DevedorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Devedor
-        fields = ['devedor_id', 'indice_reputacao', 'lead']
-        read_only_fields = ['devedor_id'] 
 
 
 class ContaSerializer(serializers.ModelSerializer):
@@ -19,18 +14,44 @@ class ContaSerializer(serializers.ModelSerializer):
         fields = ['conta_id', 'devedor', 'credor', 'valor_total', 'numero_parcelas']
         read_only_fields = ['conta_id']
 
+class DevedorPFSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Devedor
+        fields = ['devedor_id', 'tipo', 'cpf', 'nome', 'email', 'celular', 'telefone', 'indice_reputacao', 'lead']
+        read_only_fields = ['devedor_id']
 
-class CredorSerializer(serializers.ModelSerializer):
+class DevedorPJSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Devedor
+        fields = ['devedor_id', 'tipo', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'celular', 'telefone', 'indice_reputacao', 'lead']
+        read_only_fields = ['devedor_id']
+
+
+# Serializers para Credor
+
+class CredorPFSerializer(serializers.ModelSerializer):
     class Meta:
         model = Credor
-        fields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'password', 'is_active']
+        fields = ['id', 'tipo', 'cpf', 'nome', 'email', 'celular', 'telefone', 'password', 'is_active']
         extra_kwargs = {
-            'password': {'write_only': True}, 
+            'password': {'write_only': True},
         }
         read_only_fields = ['id']
 
     def create(self, validated_data):
-        # Cria o credor usando o manager
+        credor = Credor.objects.create_user(**validated_data)
+        return credor
+
+class CredorPJSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Credor
+        fields = ['id', 'tipo', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'celular', 'telefone', 'password', 'is_active']
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
         credor = Credor.objects.create_user(**validated_data)
         return credor
     

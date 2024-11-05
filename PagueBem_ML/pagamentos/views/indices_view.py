@@ -47,7 +47,11 @@ class IndicePagamentoView(APIView):
         Se `devedor_id` for fornecido, retorna apenas o índice das contas desse devedor.
         Caso contrário, retorna o índice para todos os devedores.
         """
-        resultado = []
+        resultado = {
+            'contas': [],
+            'total_contas': 0,
+            'media_geral': 0
+        }
         
         if devedor_id:
             # Busca as contas para um devedor específico
@@ -60,18 +64,28 @@ class IndicePagamentoView(APIView):
             # Busca todas as contas
             contas = Conta.objects.all()
 
+        total_media = 0
+        total_contas = contas.count()
+
         for conta in contas:
             media_tempo_pagamento = conta.pagamento_set.aggregate(Avg('tempo_para_pagar'))['tempo_para_pagar__avg']
             if media_tempo_pagamento is not None:
                 indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
-                resultado.append({
+                resultado['contas'].append({
                     'conta_id': conta.conta_id,
                     'devedor_id': conta.devedor.devedor_id,
                     'media_tempo_pagamento': media_tempo_pagamento,
                     'indice_pagamento': indice_pagamento
                 })
+                total_media += indice_pagamento
 
-        if resultado:
+        # Calcular média geral se houver contas
+        if total_contas > 0:
+            resultado['media_geral'] = total_media / total_contas
+        
+        resultado['total_contas'] = total_contas
+
+        if resultado['contas']:
             return Response(resultado, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Nenhum pagamento encontrado'}, status=status.HTTP_404_NOT_FOUND)
@@ -137,4 +151,17 @@ class IndiceRegularidadeView(APIView):
                 'indice_regularidade': indice_regularidade
             })
 
-        return Response(indices, status=status.HTTP_200_OK)
+        # Cálculo dos totais e médias
+        total_contas = len(indices)
+        media_desvio_padrao = sum(item['desvio_padrao'] for item in indices) / total_contas if total_contas > 0 else 0
+        media_indice_regularidade = sum(item['indice_regularidade'] for item in indices) / total_contas if total_contas > 0 else 0
+
+        # Preparando a resposta
+        response_data = {
+            'indices': indices,
+            'total_contas': total_contas,
+            'media_desvio_padrao': media_desvio_padrao,
+            'media_indice_regularidade': media_indice_regularidade
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
