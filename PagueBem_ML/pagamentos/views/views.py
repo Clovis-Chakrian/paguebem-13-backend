@@ -31,14 +31,6 @@ class LoginView(APIView):
             return Response({"detail": "Credenciais inválidas."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class DevedorList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated] #Exemplo de autenticação
-    queryset = Devedor.objects.all()
-    serializer_class = DevedorSerializer
-
-class DevedorDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Devedor.objects.all()
-    serializer_class = DevedorSerializer
 
 class ContaList(generics.ListCreateAPIView):
     queryset = Conta.objects.all()
@@ -48,13 +40,49 @@ class ContaDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Conta.objects.all()
     serializer_class = ContaSerializer
 
+class DevedorList(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]  # Exemplo de autenticação
+    queryset = Devedor.objects.all()
+
+    def get_serializer_class(self):
+        # Verifica o tipo no request para selecionar o serializer adequado
+        tipo = self.request.data.get('tipo', TipoPessoa.PESSOA_FISICA)
+        if tipo == TipoPessoa.PESSOA_FISICA:
+            return DevedorPFSerializer
+        return DevedorPJSerializer
+
+class DevedorDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Devedor.objects.all()
+
+    def get_serializer_class(self):
+        # Usa o tipo do objeto para decidir o serializer
+        devedor = self.get_object()
+        if devedor.tipo == TipoPessoa.PESSOA_FISICA:
+            return DevedorPFSerializer
+        return DevedorPJSerializer
+
+
+# Views para Credor
+
 class CredorList(generics.ListCreateAPIView):
     queryset = Credor.objects.all()
-    serializer_class = CredorSerializer
+
+    def get_serializer_class(self):
+        # Verifica o tipo no request para selecionar o serializer adequado
+        tipo = self.request.data.get('tipo', TipoPessoa.PESSOA_JURIDICA)
+        if tipo == TipoPessoa.PESSOA_FISICA:
+            return CredorPFSerializer
+        return CredorPJSerializer
 
 class CredorDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Credor.objects.all()
-    serializer_class = CredorSerializer
+
+    def get_serializer_class(self):
+        # Usa o tipo do objeto para decidir o serializer
+        credor = self.get_object()
+        if credor.tipo == TipoPessoa.PESSOA_FISICA:
+            return CredorPFSerializer
+        return CredorPJSerializer
 
 class PagamentoList(generics.ListCreateAPIView):
     queryset = Pagamento.objects.all()
@@ -73,15 +101,15 @@ class PagamentoDetail(generics.RetrieveUpdateDestroyAPIView):
 
 ##Métodos de exemplo usando as conveções
 # Classe para listar e criar novos devedores
-class ExampleList(generics.ListCreateAPIView):
-    queryset = Devedor.objects.all()
-    serializer_class = DevedorSerializer
+# class ExampleList(generics.ListCreateAPIView):
+#     queryset = Devedor.objects.all()
+#     serializer_class = DevedorSerializer
 
-# Classe para obter, atualizar e deletar um devedor específico
-class ExampleDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Devedor.objects.all()
-    serializer_class = DevedorSerializer
-    lookup_field = 'devedor_id'  # Especifica o campo 'devedor_id' para busca
+# # Classe para obter, atualizar e deletar um devedor específico
+# class ExampleDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Devedor.objects.all()
+#     serializer_class = DevedorSerializer
+#     lookup_field = 'devedor_id'  # Especifica o campo 'devedor_id' para busca
 
 
 # @csrf_exempt  # Para desativar a proteção CSRF (não recomendado em produção)
