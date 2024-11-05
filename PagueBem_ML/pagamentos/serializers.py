@@ -60,7 +60,9 @@ class PagamentoSerializer(serializers.ModelSerializer):
         model = Pagamento
         fields = [
             'pagamento_id', 
-            'conta', 
+            'conta',
+            'devedor',
+            'credor',
             'numero_parcela', 
             'numero_documento', 
             'vencimento', 

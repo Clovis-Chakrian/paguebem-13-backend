@@ -127,8 +127,8 @@ class Pagamento(models.Model):
     conta = models.ForeignKey(Conta, on_delete=models.CASCADE)
     
     # Novas chaves estrangeiras para acesso direto ao credor e devedor
-    credor = models.ForeignKey(Credor, on_delete=models.CASCADE, related_name='pagamentos')
-    devedor = models.ForeignKey(Devedor, on_delete=models.CASCADE, related_name='pagamentos')
+    devedor = models.ForeignKey(Devedor, on_delete=models.CASCADE)
+    credor = models.ForeignKey(Credor, on_delete=models.CASCADE)
     
     numero_parcela = models.IntegerField()
     numero_documento = models.IntegerField()
