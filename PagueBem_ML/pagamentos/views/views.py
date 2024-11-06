@@ -99,6 +99,16 @@ class PagamentoDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pagamento.objects.all()
     serializer_class = PagamentoSerializer
 
+class PagamentoListCredor(generics.ListAPIView): 
+    serializer_class = PagamentoSerializer
+
+    def get_queryset(self):
+        email_credor = self.kwargs.get("email")  # Captura o e-mail do credor da URL
+        try:
+            credor = Credor.objects.get(email=email_credor)
+            return credor.pagamento.all()  # Retorna todos os pagamentos do credor
+        except Credor.DoesNotExist:
+            return Pagamento.objects.none()  # Retorna um queryset vazio se o credor não existir
 ##Métodos de exemplo usando as conveções
 # Classe para listar e criar novos devedores
 # class ExampleList(generics.ListCreateAPIView):

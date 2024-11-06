@@ -20,6 +20,8 @@ urlpatterns = [
 
     path('pagamentos/', PagamentoList.as_view(), name='pagamento-list'),
     path('pagamentos/<int:pk>/', PagamentoDetail.as_view(), name='pagamento-detail'),
+    path('pagamentos/<str:email>/', PagamentoListCredor.as_view(), name='pagamento-credor-detail'),
+
 
      # Endpoint para obter o índice de todos os devedores (GET)
     path('indice-pagamento/', IndicePagamentoView.as_view(), name='indice_pagamento_todos'),
