@@ -165,3 +165,85 @@ class IndiceRegularidadeView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class IndiceInteracaoView(APIView):
+    """
+    View para calcular o índice de interação dos devedores com base na média de leads.
+    """
+
+    def calcular_indice_interacao(self, media_lead):
+        """
+        Calcula o índice de interação baseado na média do lead.
+        Valores possíveis:
+            - 0: Frio
+            - 3.333: Aquecendo
+            - 6.666: Quente
+            - 10: Convertido
+        """
+        return round(media_lead * 3.333, 2)
+
+    def calcular_media_lead_por_conta(self, conta):
+        """
+        Calcula a média de lead para uma conta específica.
+        """
+        media_lead = conta.pagamento_set.aggregate(Avg('lead'))['lead__avg']
+        return media_lead
+
+    @swagger_auto_schema(operation_description="Atualizar índice de interação ao receber um novo lead.")
+    def receber_lead(self, pagamento):
+        """
+        Atualiza o índice de interação com base em um novo lead recebido.
+        """
+        conta = pagamento.conta
+        media_lead = self.calcular_media_lead_por_conta(conta)
+        indice_interacao = self.calcular_indice_interacao(media_lead)
+
+        print(f"Índice de interação atualizado para conta {conta.conta_id}: {indice_interacao}")
+        return indice_interacao
+
+    def get(self, request, devedor_id=None):
+        """
+        Método GET para obter o índice de interação.
+        Se `devedor_id` for fornecido, retorna apenas o índice das contas desse devedor.
+        Caso contrário, retorna o índice para todos os devedores.
+        """
+        resultado = {
+            'contas': [],
+            'total_contas': 0,
+            'media_geral': 0
+        }
+
+        if devedor_id:
+            try:
+                devedor = Devedor.objects.get(devedor_id=devedor_id)
+                contas = Conta.objects.filter(devedor=devedor)
+            except Devedor.DoesNotExist:
+                return Response({'error': 'Devedor não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            contas = Conta.objects.all()
+
+        total_interacao = 0
+        total_contas = contas.count()
+
+        for conta in contas:
+            media_lead = self.calcular_media_lead_por_conta(conta)
+            if media_lead is not None:
+                indice_interacao = self.calcular_indice_interacao(media_lead)
+                resultado['contas'].append({
+                    'conta_id': conta.conta_id,
+                    'devedor_id': conta.devedor.devedor_id,
+                    'media_lead': media_lead,
+                    'indice_interacao': indice_interacao
+                })
+                total_interacao += indice_interacao
+
+        if total_contas > 0:
+            resultado['media_geral'] = total_interacao / total_contas
+
+        resultado['total_contas'] = total_contas
+
+        if resultado['contas']:
+            return Response(resultado, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Nenhum dado de interação encontrado'}, status=status.HTTP_404_NOT_FOUND)
