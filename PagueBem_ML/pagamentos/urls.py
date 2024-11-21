@@ -31,4 +31,10 @@ urlpatterns = [
 
     path('indice-regularidade/', IndiceRegularidadeView.as_view(), name='indice-regularidade'),
     path('indice-regularidade/<int:devedor_id>/', IndiceRegularidadeView.as_view(), name='indice-regularidade-devedor'),
+
+    path('indice-interacao/', IndiceInteracaoView.as_view(), name='indice_interacao'),
+    path('indice-interacao/<int:devedor_id>/', IndiceInteracaoView.as_view(), name='indice_interacao_cliente'),
+
+    path('indice-reputacao/', IndiceReputacaoView.as_view(), name='reputacao'),
+    path('indice-reputacao/<int:devedor_id>/', IndiceReputacaoView.as_view(), name='indice_reputacao_cliente'),
 ]

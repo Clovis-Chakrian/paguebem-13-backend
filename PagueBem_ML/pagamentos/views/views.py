@@ -41,7 +41,7 @@ class ContaDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ContaSerializer
 
 class DevedorList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]  # Exemplo de autenticação
+    # permission_classes = [IsAuthenticated]  # Exemplo de autenticação
     queryset = Devedor.objects.all()
 
     def get_serializer_class(self):

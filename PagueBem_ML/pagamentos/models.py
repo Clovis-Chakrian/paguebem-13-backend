@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
@@ -117,6 +118,16 @@ class Conta(models.Model):
     credor = models.ForeignKey(Credor, on_delete=models.CASCADE)
     valor_total = models.DecimalField(max_digits=30, decimal_places=2)
     numero_parcelas = models.IntegerField()
+    i_pag = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de pagamento")
+    i_reg = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de regularidade")
+    i_int = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de interação")
+
+    def calcular_media_tempo_pagamento(self):
+        """
+        Calcula a média do tempo para pagamento com base nos pagamentos realizados.
+        """
+        media_tempo = self.pagamento_set.aggregate(Avg('tempo_para_pagar'))['tempo_para_pagar__avg']
+        return media_tempo or 0  # Retorna 0 se não houver pagamentos
 
     def __str__(self):
         return f'Conta {self.conta_id} - Valor Total: {self.valor_total}'
