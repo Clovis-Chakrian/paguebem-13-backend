@@ -36,19 +36,19 @@ class IndicePagamentoView(APIView):
         """
         conta = pagamento.conta
         media_tempo_pagamento = conta.pagamento_set.aggregate(Avg('tempo_para_pagar'))['tempo_para_pagar__avg']
-        
-        indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
 
-        conta.i_pag = indice_pagamento
-        conta.save()
+        if media_tempo_pagamento is not None:
+            indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
+            conta.i_pag = indice_pagamento
+            conta.save()
+            print(f"Índice de pagamento atualizado para conta {conta.conta_id}: {indice_pagamento}")
+        return conta.i_pag
 
-        print(f"Índice de pagamento atualizado para conta {conta.conta_id}: {indice_pagamento}")
-        return indice_pagamento 
-
-    def get(self, request, devedor_id=None):
+    def get(self, request, devedor_id=None, conta_id=None):
         """
         Método GET para obter o índice de pagamento.
         Se `devedor_id` for fornecido, retorna apenas o índice das contas desse devedor.
+        Se `conta_id` for fornecido, retorna o índice para a conta específica.
         Caso contrário, retorna o índice para todos os devedores.
         """
         resultado = {
@@ -56,42 +56,70 @@ class IndicePagamentoView(APIView):
             'total_contas': 0,
             'media_geral': 0
         }
-        
-        if devedor_id:
-            # Busca as contas para um devedor específico
+
+        if conta_id:
+            # Busca o índice para uma conta específica
             try:
-                devedor = Devedor.objects.get(devedor_id=devedor_id)
-                contas = Conta.objects.filter(devedor=devedor)
-            except Devedor.DoesNotExist:
-                return Response({'error': 'Devedor não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+                conta = Conta.objects.get(conta_id=conta_id)
+                media_tempo_pagamento = conta.pagamento_set.aggregate(Avg('tempo_para_pagar'))['tempo_para_pagar__avg']
+
+                #criar lógica de pegar o índice no banco
+
+                if media_tempo_pagamento is not None:
+                    indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
+                    resultado['contas'].append({
+                        'conta_id': conta.conta_id,
+                        'devedor_id': conta.devedor.devedor_id,
+                        'media_tempo_pagamento': media_tempo_pagamento,
+                        'indice_pagamento': indice_pagamento
+                    })
+                    resultado['total_contas'] = 1
+                    resultado['media_geral'] = indice_pagamento
+                else:
+                    return Response({'error': 'Nenhum pagamento encontrado para a conta especificada'}, status=status.HTTP_404_NOT_FOUND)
+
+            except Conta.DoesNotExist:
+                return Response({'error': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
         else:
-            # Busca todas as contas
-            contas = Paginator(Conta.objects.all(), 10)
-            print(f'Número de contas: {contas.page(1).object_list.count()}')
+            # Busca contas do devedor, se fornecido
+            if devedor_id:
+                try:
+                    devedor = Devedor.objects.get(devedor_id=devedor_id)
+                    contas = Conta.objects.filter(devedor=devedor).annotate(media_tempo_pagamento=Avg('pagamento__tempo_para_pagar'))
+                except Devedor.DoesNotExist:
+                    return Response({'error': 'Devedor não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                # Busca todas as contas e calcula a média de tempo de pagamento
+                contas = Conta.objects.all().annotate(media_tempo_pagamento=Avg('pagamento__tempo_para_pagar'))
 
-        total_media = 0
-        total_contas = contas.page(1).object_list.count()
+            total_media = 0
+            total_contas = contas.count()
 
-        print(f'\niniciou: {datetime.datetime.now()}')
-        for conta in contas.page(1).object_list:
-            media_tempo_pagamento = conta.pagamento_set.aggregate(Avg('tempo_para_pagar'))['tempo_para_pagar__avg']
+            print(f'\niniciou: {datetime.datetime.now()}')
 
-            if media_tempo_pagamento is not None:
-                indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
-                resultado['contas'].append({
-                    'conta_id': conta.conta_id,
-                    'devedor_id': conta.devedor.devedor_id,
-                    'media_tempo_pagamento': media_tempo_pagamento,
-                    'indice_pagamento': indice_pagamento
-                })
-                total_media += indice_pagamento
-        print(f'\nfinalizou: {datetime.datetime.now()}')
+            for conta in contas:
+                media_tempo_pagamento = conta.media_tempo_pagamento
+                if media_tempo_pagamento is not None:
+                    indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
+                    conta.i_pag = indice_pagamento
+                    print('mais um inidce salvo')
 
-        # Calcular média geral se houver contas
-        if total_contas > 0:
-            resultado['media_geral'] = total_media / total_contas
-        
-        resultado['total_contas'] = total_contas
+                    resultado['contas'].append({
+                        'conta_id': conta.conta_id,
+                        'devedor_id': conta.devedor.devedor_id,
+                        'media_tempo_pagamento': media_tempo_pagamento,
+                        'indice_pagamento': indice_pagamento
+                    })
+                    total_media += indice_pagamento
+
+            print(f'\nfinalizou: {datetime.datetime.now()}')
+
+            # Calcular média geral se houver contas
+            if total_contas > 0:
+                resultado['media_geral'] = total_media / total_contas
+
+            resultado['total_contas'] = total_contas
 
         if resultado['contas']:
             return Response(resultado, status=status.HTTP_200_OK)
@@ -140,14 +168,18 @@ class IndiceRegularidadeView(APIView):
             )
 
         indices = []
+
+        print(f'\niniciou: {datetime.datetime.now()}')
         for row in resultado:
             desvio_padrao = row.get('desvio_padrao', 0) or 0  # Ajuste caso o valor não exista
             indice_regularidade = self.calcular_indice_regularidade(desvio_padrao)
             
             try:
-                conta = Conta.objects.get(id=row['conta_id'])  # Certifique-se que 'conta_id' está correto
+                conta = Conta.objects.get(conta_id=row['conta_id'])  # Certifique-se que 'conta_id' está correto
                 conta.i_reg = indice_regularidade
                 conta.save()
+                print('mais um inidce salvo')
+
             except Conta.DoesNotExist:
                 continue 
 
@@ -158,6 +190,8 @@ class IndiceRegularidadeView(APIView):
                 'quantidade_pagamentos': row['quantidade_pagamentos'],
                 'indice_regularidade': indice_regularidade
             })
+        
+        print(f'\nfinalizou: {datetime.datetime.now()}')
 
         total_contas = len(indices)
         media_desvio_padrao = sum(item['desvio_padrao'] for item in indices) / total_contas if total_contas else 0
@@ -204,7 +238,7 @@ class IndiceInteracaoView(APIView):
         media_lead = self.calcular_media_lead_por_conta(conta)
         indice_interacao = self.calcular_indice_interacao(media_lead)
 
-        conta.i_reg = indice_interacao
+        conta.i_int = indice_interacao
         conta.save()
              
 
@@ -235,10 +269,15 @@ class IndiceInteracaoView(APIView):
         total_interacao = 0
         total_contas = contas.count()
 
+        print(f'\niniciou: {datetime.datetime.now()}')
+
         for conta in contas:
             media_lead = self.calcular_media_lead_por_conta(conta)
             if media_lead is not None:
                 indice_interacao = self.calcular_indice_interacao(media_lead)
+                conta.i_int = indice_interacao
+                conta.save()
+                print('mais um indice salvo')
                 resultado['contas'].append({
                     'conta_id': conta.conta_id,
                     'devedor_id': conta.devedor.devedor_id,
@@ -246,6 +285,8 @@ class IndiceInteracaoView(APIView):
                     'indice_interacao': indice_interacao
                 })
                 total_interacao += indice_interacao
+        
+        print(f'\nfinalizou: {datetime.datetime.now()}')
 
         if total_contas > 0:
             resultado['media_geral'] = total_interacao / total_contas
@@ -272,42 +313,6 @@ class IndiceReputacaoView(APIView):
         """
         return ((i_pag * 5) + (i_reg * 3) + (i_int * 2)) / 10
 
-    def get_indices_por_conta(self, conta):
-        """
-        Obtém os índices de pagamento, regularidade e interação para uma conta específica.
-        """
-        i_pag = conta.i_pag
-        i_reg = conta.i_reg
-        i_int = conta.i_int
-        return i_pag, i_reg, i_int
-
-    def calcular_indice_reputacao_para_contas(self, contas):
-        """
-        Calcula o índice de reputação para uma lista de contas.
-        """
-        resultado = []
-        total_reputacao = 0
-
-        for conta in contas:
-            i_pag, i_reg, i_int = self.get_indices_por_conta(conta)
-
-            if None not in (i_pag, i_reg, i_int):
-                i_rep = self.calcular_indice_reputacao(i_pag, i_reg, i_int)
-                devedor = conta.devedor
-                devedor.i_reg = i_reg
-
-                resultado.append({
-                    'conta_id': conta.conta_id,
-                    'devedor_id': conta.devedor.devedor_id,
-                    'i_pag': i_pag,
-                    'i_reg': i_reg,
-                    'i_int': i_int,
-                    'i_rep': i_rep
-                })
-                total_reputacao += i_rep
-
-        return resultado, total_reputacao
-
     def get(self, request, devedor_id=None):
         """
         Método GET para obter o índice de reputação.
@@ -315,9 +320,9 @@ class IndiceReputacaoView(APIView):
         Caso contrário, retorna o índice para todas as contas.
         """
         resultado = {
-            'contas': [],
+            'indices': [],
             'total_contas': 0,
-            'media_geral_reputacao': 0
+            'media_reputacao': 0
         }
 
         if devedor_id:
@@ -330,15 +335,44 @@ class IndiceReputacaoView(APIView):
             contas = Conta.objects.all()
 
         total_contas = contas.count()
-        contas_reputacao, total_reputacao = self.calcular_indice_reputacao_para_contas(contas)
+
+        indices_reputacao = []
+        total_reputacao = 0
+
+        print(f'\niniciou: {datetime.datetime.now()}')
+
+        for conta in contas:
+            i_pag = conta.i_pag
+            i_reg = conta.i_reg
+            i_int = conta.i_int
+
+            if None not in (i_pag, i_reg, i_int):
+                i_rep = self.calcular_indice_reputacao(i_pag, i_reg, i_int)
+                # devedor = conta.devedor
+                # devedor.i_reg = i_reg
+                conta.i_rep = i_rep  # Atualiza o índice de reputação
+                conta.save()  # Salva a conta com o novo índice de reputação
+                print('mais um idice salvo')
+                indices_reputacao.append({
+                    'conta_id': conta.conta_id,
+                    'devedor_id': conta.devedor.devedor_id,
+                    'i_pag': i_pag,
+                    'i_reg': i_reg,
+                    'i_int': i_int,
+                    'i_rep': i_rep
+                })
+
+                total_reputacao += i_rep
+                
+        print(f'\nfinalizou: {datetime.datetime.now()}')
 
         if total_contas > 0:
-            resultado['media_geral_reputacao'] = total_reputacao / total_contas
+            resultado['media_reputacao'] = total_reputacao / total_contas
 
-        resultado['contas'] = contas_reputacao
+        resultado['indices'] = indices_reputacao
         resultado['total_contas'] = total_contas
 
-        if resultado['contas']:
+        if resultado['indices']:
             return Response(resultado, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Nenhum índice de reputação encontrado'}, status=status.HTTP_404_NOT_FOUND)

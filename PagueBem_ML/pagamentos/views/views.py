@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
-
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
@@ -34,7 +34,12 @@ class LoginView(APIView):
 
 class ContaList(generics.ListCreateAPIView):
     queryset = Conta.objects.all()
-    serializer_class = ContaSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':  # Usar serializer de criação para POST
+            return ContaCreateSerializer
+        return ContaSerializer
+
 
 class ContaDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Conta.objects.all()
@@ -64,25 +69,43 @@ class DevedorDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # Views para Credor
 
-class CredorList(generics.ListCreateAPIView):
+class CredorListView(generics.ListAPIView):
+    """
+    View para listar todos os credores, independentemente do tipo.
+    """
+    queryset = Credor.objects.all()
+    serializer_class = CredorSerializer  # Serializer genérico que inclui campos de PF e PJ
+
+class CredorDetailView(generics.RetrieveAPIView):
+    """
+    View para buscar detalhes de um credor específico pelo ID.
+    """
     queryset = Credor.objects.all()
 
     def get_serializer_class(self):
-        # Verifica o tipo no request para selecionar o serializer adequado
-        tipo = self.request.data.get('tipo', TipoPessoa.PESSOA_JURIDICA)
-        if tipo == TipoPessoa.PESSOA_FISICA:
-            return CredorPFSerializer
-        return CredorPJSerializer
-
-class CredorDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Credor.objects.all()
-
-    def get_serializer_class(self):
-        # Usa o tipo do objeto para decidir o serializer
+        """
+        Seleciona o serializer com base no tipo do credor.
+        """
         credor = self.get_object()
-        if credor.tipo == TipoPessoa.PESSOA_FISICA:
+        if credor.tipo == 'PESSOA_FISICA':
             return CredorPFSerializer
         return CredorPJSerializer
+    
+class CredorPFListCreateView(generics.ListCreateAPIView):
+    queryset = Credor.objects.filter(tipo='PESSOA_FISICA')
+    serializer_class = CredorPFSerializer
+
+class CredorPFDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Credor.objects.filter(tipo='PESSOA_FISICA')
+    serializer_class = CredorPFSerializer
+
+class CredorPJListCreateView(generics.ListCreateAPIView):
+    queryset = Credor.objects.filter(tipo='PESSOA_JURIDICA')
+    serializer_class = CredorPJSerializer
+
+class CredorPJDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Credor.objects.filter(tipo='PESSOA_JURIDICA')
+    serializer_class = CredorPJSerializer
 
 class PagamentoList(generics.ListCreateAPIView):
     queryset = Pagamento.objects.all()

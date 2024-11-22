@@ -9,6 +9,14 @@ class LoginSerializer(serializers.Serializer):
 
 
 class ContaSerializer(serializers.ModelSerializer):
+    i_pag = serializers.DecimalField(max_digits=4, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = Conta
+        fields = ['conta_id', 'devedor', 'credor', 'valor_total', 'numero_parcelas', 'i_pag']
+        read_only_fields = ['conta_id', 'i_pag']
+
+class ContaCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conta
         fields = ['conta_id', 'devedor', 'credor', 'valor_total', 'numero_parcelas']
@@ -20,9 +28,9 @@ class DevedorPFSerializer(serializers.ModelSerializer):
         fields = ['devedor_id', 'tipo', 'cpf', 'nome', 'email', 'celular', 'telefone', 'indice_reputacao', 'lead']
         read_only_fields = ['devedor_id']
 
-    # def create(self, validated_data):
-    #     validated_data['tipo'] = 'PF'  # Define o tipo como Pessoa Física
-    #     return super().create(validated_data)
+    def create(self, validated_data):
+        validated_data['tipo'] = 'PF'  # Define o tipo como Pessoa Física
+        return super().create(validated_data)
 
 class DevedorPJSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,12 +38,17 @@ class DevedorPJSerializer(serializers.ModelSerializer):
         fields = ['devedor_id', 'tipo', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'celular', 'telefone', 'indice_reputacao', 'lead']
         read_only_fields = ['devedor_id']
     
-    # def create(self, validated_data):
-    #     validated_data['tipo'] = 'PJ'  # Define o tipo como Pessoa Jurídica
-    #     return super().create(validated_data)
+    def create(self, validated_data):
+        validated_data['tipo'] = 'PJ'  # Define o tipo como Pessoa Jurídica
+        return super().create(validated_data)
 
 
 # Serializers para Credor
+class CredorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Credor
+        fields = ['id', 'nome', 'email', 'tipo', 'cpf', 'cnpj']  # Inclua campos genéricos
+
 
 class CredorPFSerializer(serializers.ModelSerializer):
     class Meta:

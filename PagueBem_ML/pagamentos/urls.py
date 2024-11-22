@@ -8,12 +8,17 @@ urlpatterns = [
 
     # path('exemplo/', ExampleList.as_view(), name='exemplo-list'),
     # path('exemplo/<int:devedor_id>/', ExampleDetail.as_view(), name='exemplo-detail'),
+    path('credores/', CredorListView.as_view(), name='credor-list'),
+    path('credores/<int:pk>/', CredorDetailView.as_view(), name='credor-detail'),
+
+    # Credores por Tipo
+    path('credores/pf/', CredorPFListCreateView.as_view(), name='credor-pf-list-create'),
+    path('credores/pf/<int:pk>/', CredorPFDetailView.as_view(), name='credor-pf-detail'),
+    path('credores/pj/', CredorPJListCreateView.as_view(), name='credor-pj-list-create'),
+    path('credores/pj/<int:pk>/', CredorPJDetailView.as_view(), name='credor-pj-detail'),
 
     path('devedores/', DevedorList.as_view(), name='devedor-list'),
     path('devedores/<int:pk>/', DevedorDetail.as_view(), name='devedor-detail'),
-
-    path('credores/', CredorList.as_view(), name='credor-list'),
-    path('credores/<int:pk>/', CredorDetail.as_view(), name='credor-detail'),
 
     path('contas/', ContaList.as_view(), name='conta-list'),
     path('contas/<int:pk>/', ContaDetail.as_view(), name='conta-detail'),
