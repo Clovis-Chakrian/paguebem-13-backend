@@ -101,18 +101,22 @@ class IndicePagamentoView(APIView):
             for conta in contas:
                 media_tempo_pagamento = conta.media_tempo_pagamento
                 if media_tempo_pagamento is not None:
-                    indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
-                    conta.i_pag = indice_pagamento
-                    conta.save()
-                    print('mais um inidce salvo')
+                    if conta.i_pag is None:  # Verifica se o índice já foi calculado
+                        indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
+                        conta.i_pag = indice_pagamento
+                        conta.save()
+                        print('Índice de pagamento calculado e salvo.')
+                    else:
+                        print('Índice de pagamento já existente, não será recalculado.')
 
                     resultado['contas'].append({
                         'conta_id': conta.conta_id,
                         'devedor_id': conta.devedor.devedor_id,
                         'media_tempo_pagamento': media_tempo_pagamento,
-                        'indice_pagamento': indice_pagamento
+                        'indice_pagamento': conta.i_pag  # Retorna o índice atual (calculado ou já existente)
                     })
-                    total_media += indice_pagamento
+                    total_media += conta.i_pag
+
 
             print(f'\nfinalizou: {datetime.datetime.now()}')
 
@@ -172,26 +176,22 @@ class IndiceRegularidadeView(APIView):
 
         print(f'\niniciou: {datetime.datetime.now()}')
         for row in resultado:
-            desvio_padrao = row.get('desvio_padrao', 0) or 0  # Ajuste caso o valor não exista
-            indice_regularidade = self.calcular_indice_regularidade(desvio_padrao)
-            
-            try:
-                conta = Conta.objects.get(conta_id=row['conta_id'])  # Certifique-se que 'conta_id' está correto
+            desvio_padrao = row.get('desvio_padrao', 0) or 0
+            if conta.i_reg is None:  # Verifica se o índice de regularidade já foi calculado
+                indice_regularidade = self.calcular_indice_regularidade(desvio_padrao)
                 conta.i_reg = indice_regularidade
                 conta.save()
-                print('mais um inidce salvo')
-
-            except Conta.DoesNotExist:
-                continue 
+                print('Índice de regularidade calculado e salvo.')
+            else:
+                print('Índice de regularidade já existente, não será recalculado.')
 
             indices.append({
-                'identificador': row['conta_id'],
-                'devedor_id': row.get('conta__devedor__devedor_id', devedor_id),  # Inclui devedor_id
+                'identificador': conta.conta_id,
+                'devedor_id': row.get('conta__devedor__devedor_id', devedor_id),
                 'desvio_padrao': desvio_padrao,
                 'quantidade_pagamentos': row['quantidade_pagamentos'],
-                'indice_regularidade': indice_regularidade
+                'indice_regularidade': conta.i_reg  # Retorna o índice atual
             })
-        
         print(f'\nfinalizou: {datetime.datetime.now()}')
 
         total_contas = len(indices)
