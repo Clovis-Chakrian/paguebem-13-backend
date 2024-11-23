@@ -13,8 +13,8 @@ class ContaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Conta
-        fields = ['conta_id', 'devedor', 'credor', 'valor_total', 'numero_parcelas', 'i_pag']
-        read_only_fields = ['conta_id', 'i_pag']
+        fields = ['conta_id', 'devedor', 'credor', 'valor_total', 'numero_parcelas', 'i_pag', 'i_reg', 'i_int', 'i_rep']
+        read_only_fields = ['conta_id', 'i_pag', 'i_reg', 'i_int', 'i_rep']
 
 class ContaCreateSerializer(serializers.ModelSerializer):
     class Meta:

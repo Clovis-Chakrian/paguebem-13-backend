@@ -31,8 +31,8 @@ class Devedor(models.Model):
     def clean(self):
         if self.tipo == TipoPessoa.PESSOA_FISICA:
             # Validação para Pessoa Física
-            if not self.cpf or not self.nome:
-                raise ValidationError("CPF e Nome são obrigatórios para Pessoa Física.")
+            # if not self.cpf or not self.nome:
+            #     raise ValidationError("CPF e Nome são obrigatórios para Pessoa Física.")
             # Limpar campos exclusivos de PJ
             self.cnpj = None
             self.razao_social = None
@@ -121,6 +121,7 @@ class Conta(models.Model):
     i_pag = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de pagamento")
     i_reg = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de regularidade")
     i_int = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de interação")
+    i_rep = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de reputação")
 
     def calcular_media_tempo_pagamento(self):
         """

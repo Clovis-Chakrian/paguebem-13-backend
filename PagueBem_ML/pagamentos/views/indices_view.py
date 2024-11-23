@@ -103,6 +103,7 @@ class IndicePagamentoView(APIView):
                 if media_tempo_pagamento is not None:
                     indice_pagamento = self.calcular_indice_pagamento(media_tempo_pagamento)
                     conta.i_pag = indice_pagamento
+                    conta.save()
                     print('mais um inidce salvo')
 
                     resultado['contas'].append({
@@ -298,7 +299,6 @@ class IndiceInteracaoView(APIView):
         else:
             return Response({'error': 'Nenhum dado de interação encontrado'}, status=status.HTTP_404_NOT_FOUND)
         
-
 class IndiceReputacaoView(APIView):
     """
     View para calcular o índice de reputação dos devedores com base nos índices de pagamento, regularidade e interação.
@@ -316,7 +316,8 @@ class IndiceReputacaoView(APIView):
     def get(self, request, devedor_id=None):
         """
         Método GET para obter o índice de reputação.
-        Se `devedor_id` for fornecido, retorna o índice de reputação apenas das contas desse devedor.
+        Se `devedor_id` for fornecido, retorna o índice de reputação apenas das contas desse devedor
+        e salva a média como o índice de reputação do devedor.
         Caso contrário, retorna o índice para todas as contas.
         """
         resultado = {
@@ -325,6 +326,7 @@ class IndiceReputacaoView(APIView):
             'media_reputacao': 0
         }
 
+        # Filtra contas por devedor ou todas
         if devedor_id:
             try:
                 devedor = Devedor.objects.get(devedor_id=devedor_id)
@@ -335,11 +337,10 @@ class IndiceReputacaoView(APIView):
             contas = Conta.objects.all()
 
         total_contas = contas.count()
-
         indices_reputacao = []
         total_reputacao = 0
 
-        print(f'\niniciou: {datetime.datetime.now()}')
+        print(f'\nInício do processamento: {datetime.datetime.now()}')
 
         for conta in contas:
             i_pag = conta.i_pag
@@ -348,11 +349,8 @@ class IndiceReputacaoView(APIView):
 
             if None not in (i_pag, i_reg, i_int):
                 i_rep = self.calcular_indice_reputacao(i_pag, i_reg, i_int)
-                # devedor = conta.devedor
-                # devedor.i_reg = i_reg
                 conta.i_rep = i_rep  # Atualiza o índice de reputação
                 conta.save()  # Salva a conta com o novo índice de reputação
-                print('mais um idice salvo')
                 indices_reputacao.append({
                     'conta_id': conta.conta_id,
                     'devedor_id': conta.devedor.devedor_id,
@@ -361,14 +359,18 @@ class IndiceReputacaoView(APIView):
                     'i_int': i_int,
                     'i_rep': i_rep
                 })
-
                 total_reputacao += i_rep
-                
-        print(f'\nfinalizou: {datetime.datetime.now()}')
 
-        if total_contas > 0:
-            resultado['media_reputacao'] = total_reputacao / total_contas
+        print(f'\nFim do processamento: {datetime.datetime.now()}')
 
+        # Cálculo e atualização do índice de reputação do devedor, se aplicável
+        if devedor_id and total_contas > 0:
+            media_reputacao = total_reputacao / total_contas
+            devedor.indice_reputacao = media_reputacao
+            devedor.save()  # Salva o índice de reputação do devedor
+            resultado['media_reputacao'] = media_reputacao
+
+        # Atualização para a resposta final
         resultado['indices'] = indices_reputacao
         resultado['total_contas'] = total_contas
 
