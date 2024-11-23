@@ -11,7 +11,7 @@ schema_view = get_schema_view(
         description="API dos Índices de Reputação",
         license=openapi.License(name="Awesome License"),
     ),
-    url='https://paguebem-api.chacha.vps-kinghost.net',
+    # url='https://paguebem-api.chacha.vps-kinghost.net',
     public=True,
     permission_classes=(permissions.AllowAny, ),
 )

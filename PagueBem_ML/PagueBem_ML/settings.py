@@ -99,6 +99,17 @@ WSGI_APPLICATION = "PagueBem_ML.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+DATABASES = { 
+    'default': { 
+        'ENGINE': 'django.db.backends.postgresql', 
+        'NAME': 'paguebem-13', 
+        'USER': 'paguebem', 
+        'PASSWORD': '@paguebem2024!', 
+        'HOST': 'chacha.vps-kinghost.net', 
+        'PORT': '55432'
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
