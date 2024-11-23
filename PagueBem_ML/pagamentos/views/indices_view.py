@@ -2,18 +2,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..models import Devedor, Pagamento, Conta
-from ..serializers import PagamentoSerializer
 from django.db.models import Avg
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Avg, Count, StdDev
 import datetime
-from django.core.paginator import Paginator
 
 @swagger_auto_schema(method = 'GET')
 class IndicePagamentoView(APIView):
     """
     View para calcular o índice de pagamento por devedor, agrupado por conta.
     """
+
 
     def calcular_indice_pagamento(self, media):
         # Retorna o índice de acordo com a média
@@ -177,13 +176,21 @@ class IndiceRegularidadeView(APIView):
         print(f'\niniciou: {datetime.datetime.now()}')
         for row in resultado:
             desvio_padrao = row.get('desvio_padrao', 0) or 0
-            if conta.i_reg is None:  # Verifica se o índice de regularidade já foi calculado
-                indice_regularidade = self.calcular_indice_regularidade(desvio_padrao)
-                conta.i_reg = indice_regularidade
-                conta.save()
-                print('Índice de regularidade calculado e salvo.')
-            else:
-                print('Índice de regularidade já existente, não será recalculado.')
+            indice_regularidade = self.calcular_indice_regularidade(desvio_padrao)
+            
+            try:
+                conta = Conta.objects.get(conta_id=row['conta_id']) 
+                 # Certifique-se que 'conta_id' está correto
+                if conta.i_reg is None:  # Verifica se o índice de regularidade já foi calculado
+                    indice_regularidade = self.calcular_indice_regularidade(desvio_padrao)
+                    conta.i_reg = indice_regularidade
+                    conta.save()
+                    print('Índice de regularidade calculado e salvo.')
+                else:
+                    print('Índice de regularidade já existente, não será recalculado.')
+
+            except Conta.DoesNotExist:
+                continue 
 
             indices.append({
                 'identificador': conta.conta_id,
@@ -273,19 +280,30 @@ class IndiceInteracaoView(APIView):
         print(f'\niniciou: {datetime.datetime.now()}')
 
         for conta in contas:
-            media_lead = self.calcular_media_lead_por_conta(conta)
-            if media_lead is not None:
-                indice_interacao = self.calcular_indice_interacao(media_lead)
-                conta.i_int = indice_interacao
-                conta.save()
-                print('mais um indice salvo')
+            # Verifica se o índice de interação já está calculado
+            if conta.i_int is None:  # Verifica se o campo está nulo no banco
+                media_lead = self.calcular_media_lead_por_conta(conta)
+                if media_lead is not None:  # Apenas calcula se a média de leads está disponível
+                    indice_interacao = self.calcular_indice_interacao(media_lead)
+                    conta.i_int = indice_interacao
+                    conta.save()
+                    print('Mais um índice salvo')
+                    resultado['contas'].append({
+                        'conta_id': conta.conta_id,
+                        'devedor_id': conta.devedor.devedor_id,
+                        'media_lead': media_lead,
+                        'indice_interacao': indice_interacao
+                    })
+                    total_interacao += indice_interacao
+            else:
+                # Índice já está calculado, apenas retorna o valor existente
+                print(f"Índice de interação já calculado para a conta {conta.conta_id}")
                 resultado['contas'].append({
                     'conta_id': conta.conta_id,
                     'devedor_id': conta.devedor.devedor_id,
-                    'media_lead': media_lead,
-                    'indice_interacao': indice_interacao
+                    'media_lead': None,  # Não recalcula
+                    'indice_interacao': conta.i_int  # Retorna o valor do banco
                 })
-                total_interacao += indice_interacao
         
         print(f'\nfinalizou: {datetime.datetime.now()}')
 
@@ -343,23 +361,38 @@ class IndiceReputacaoView(APIView):
         print(f'\nInício do processamento: {datetime.datetime.now()}')
 
         for conta in contas:
-            i_pag = conta.i_pag
-            i_reg = conta.i_reg
-            i_int = conta.i_int
+    # Verifica se o índice de reputação já está calculado
+            if conta.i_rep is None:  # Apenas calcula se o índice de reputação está nulo
+                i_pag = conta.i_pag
+                i_reg = conta.i_reg
+                i_int = conta.i_int
 
-            if None not in (i_pag, i_reg, i_int):
-                i_rep = self.calcular_indice_reputacao(i_pag, i_reg, i_int)
-                conta.i_rep = i_rep  # Atualiza o índice de reputação
-                conta.save()  # Salva a conta com o novo índice de reputação
+                if None not in (i_pag, i_reg, i_int):  # Certifica que todos os índices necessários estão presentes
+                    i_rep = self.calcular_indice_reputacao(i_pag, i_reg, i_int)
+                    conta.i_rep = i_rep  # Atualiza o índice de reputação
+                    conta.save()  # Salva a conta com o novo índice de reputação
+                    indices_reputacao.append({
+                        'conta_id': conta.conta_id,
+                        'devedor_id': conta.devedor.devedor_id,
+                        'i_pag': i_pag,
+                        'i_reg': i_reg,
+                        'i_int': i_int,
+                        'i_rep': i_rep
+                    })
+                    total_reputacao += i_rep
+            else:
+                # Índice de reputação já calculado, apenas retorna o valor existente
+                print(f"Índice de reputação já calculado para a conta {conta.conta_id}")
                 indices_reputacao.append({
                     'conta_id': conta.conta_id,
                     'devedor_id': conta.devedor.devedor_id,
-                    'i_pag': i_pag,
-                    'i_reg': i_reg,
-                    'i_int': i_int,
-                    'i_rep': i_rep
+                    'i_pag': conta.i_pag,
+                    'i_reg': conta.i_reg,
+                    'i_int': conta.i_int,
+                    'i_rep': conta.i_rep  # Retorna o valor do banco
                 })
-                total_reputacao += i_rep
+                total_reputacao += conta.i_rep  # Adiciona o índice existente ao total
+
 
         print(f'\nFim do processamento: {datetime.datetime.now()}')
 
