@@ -25,7 +25,10 @@ SECRET_KEY = "django-insecure-_k-%a*yn2dp^xw72#f$#udz@rcj&!uj7@@v$-_7ug@znf)uz&r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "*",
+    "paguebem-api.chacha.vps-kinghost.net"
+]
 
 # Application definition
 
@@ -39,7 +42,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "pagamentos",
-     "drf_yasg"
+    "drf_yasg",
+    "corsheaders"
 ]
 
 REST_FRAMEWORK = {
@@ -66,7 +70,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware"
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "PagueBem_ML.urls"
 
@@ -91,13 +98,6 @@ WSGI_APPLICATION = "PagueBem_ML.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-#DATABASES = {
-#    "default": {
-#        "ENGINE": "django.db.backends.sqlite3",
-#        "NAME": BASE_DIR / "db.sqlite3",
-#    }
-#}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
