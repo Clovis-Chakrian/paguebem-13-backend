@@ -26,7 +26,7 @@ class DevedorPFSerializer(serializers.ModelSerializer):
     class Meta:
         model = Devedor
         fields = ['devedor_id', 'tipo', 'cpf', 'nome', 'email', 'celular', 'telefone', 'indice_reputacao', 'lead']
-        read_only_fields = ['devedor_id']
+        read_only_fields = ['devedor_id', 'indice_reputacao', 'lead']
 
     def create(self, validated_data):
         validated_data['tipo'] = 'PF'  # Define o tipo como Pessoa Física
@@ -36,7 +36,7 @@ class DevedorPJSerializer(serializers.ModelSerializer):
     class Meta:
         model = Devedor
         fields = ['devedor_id', 'tipo', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'celular', 'telefone', 'indice_reputacao', 'lead']
-        read_only_fields = ['devedor_id']
+        read_only_fields = ['devedor_id', 'indice_reputacao', 'lead']
     
     def create(self, validated_data):
         validated_data['tipo'] = 'PJ'  # Define o tipo como Pessoa Jurídica

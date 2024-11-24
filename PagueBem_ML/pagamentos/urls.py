@@ -6,19 +6,21 @@ urlpatterns = [
 
     path('login/', LoginView.as_view(), name='login'),
 
-    # path('exemplo/', ExampleList.as_view(), name='exemplo-list'),
-    # path('exemplo/<int:devedor_id>/', ExampleDetail.as_view(), name='exemplo-detail'),
     path('credores/', CredorListView.as_view(), name='credor-list'),
     path('credores/<int:pk>/', CredorDetailView.as_view(), name='credor-detail'),
-
-    # Credores por Tipo
+    path('credores/pf/', CredorPFListView.as_view(), name='credor-pf-list'),
+    path('credores/pj/', CredorPJListView.as_view(), name='credor-pj-list'),
     path('credores/pf/', CredorPFListCreateView.as_view(), name='credor-pf-list-create'),
     path('credores/pf/<int:pk>/', CredorPFDetailView.as_view(), name='credor-pf-detail'),
     path('credores/pj/', CredorPJListCreateView.as_view(), name='credor-pj-list-create'),
     path('credores/pj/<int:pk>/', CredorPJDetailView.as_view(), name='credor-pj-detail'),
 
-    path('devedores/', DevedorList.as_view(), name='devedor-list'),
-    path('devedores/<int:pk>/', DevedorDetail.as_view(), name='devedor-detail'),
+    path('devedores/', DevedorListView.as_view(), name='devedor-list'),
+    path('devedor/<int:pk>/', DevedorDetailView.as_view(), name='devedor-detail'),
+    path('devedores/pf/', DevedorPFListCreateView.as_view(), name='devedor-pf-list-create'),
+    path('devedor/pf/<int:pk>/', DevedorPFDetailView.as_view(), name='devedor-pf-detail'),
+    path('devedores/pj/', DevedorPJListCreateView.as_view(), name='devedor-pj-list-create'),
+    path('devedor/pj/<int:pk>/', DevedorPJDetailView.as_view(), name='devedor-pj-detail'),
 
     path('contas/', ContaList.as_view(), name='conta-list'),
     path('contas/<int:pk>/', ContaDetail.as_view(), name='conta-detail'),

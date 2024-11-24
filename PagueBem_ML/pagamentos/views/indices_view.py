@@ -222,11 +222,6 @@ class IndiceInteracaoView(APIView):
     def calcular_indice_interacao(self, media_lead):
         """
         Calcula o índice de interação baseado na média do lead.
-        Valores possíveis:
-            - 0: Frio
-            - 3.333: Aquecendo
-            - 6.666: Quente
-            - 10: Convertido
         """
         return round(media_lead * 3.333, 2)
 
@@ -234,10 +229,39 @@ class IndiceInteracaoView(APIView):
         """
         Calcula a média de lead para uma conta específica.
         """
+        if conta.media_lead is not None:
+            return conta.media_lead
+
+        # Calcula a média de leads
         media_lead = conta.pagamento_set.aggregate(Avg('lead'))['lead__avg']
+        if media_lead is not None:
+            conta.media_lead = media_lead
+            conta.save(update_fields=['media_lead'])  # Salva apenas a média
         return media_lead
 
-    @swagger_auto_schema(operation_description="Atualizar índice de interação ao receber um novo lead.")
+    def calcular_media_lead_devedor(self, devedor):
+        """
+        Calcula a média das médias de lead das contas de um devedor.
+        """
+        contas = Conta.objects.filter(devedor=devedor)
+        total_media_lead = 0
+        total_contas = contas.count()
+
+        for conta in contas:
+            media_lead = self.calcular_media_lead_por_conta(conta)  # Certifique-se de que a média de lead da conta é calculada
+            if media_lead is not None:
+                total_media_lead += media_lead
+
+        if total_contas > 0:
+            media_lead_devedor = total_media_lead / total_contas
+            devedor.lead = media_lead_devedor  # Atualiza o campo 'lead' do devedor
+            devedor.save(update_fields=['lead'])  # Salva o valor calculado no campo 'lead'
+            print(f"Média de leads do devedor {devedor.devedor_id} calculada e salva: {media_lead_devedor}")
+            return media_lead_devedor
+        else:
+            print(f"Devedor {devedor.devedor_id} não possui contas associadas")
+            return None
+
     def receber_lead(self, pagamento):
         """
         Atualiza o índice de interação com base em um novo lead recebido.
@@ -248,8 +272,6 @@ class IndiceInteracaoView(APIView):
 
         conta.i_int = indice_interacao
         conta.save()
-             
-
         print(f"Índice de interação atualizado para conta {conta.conta_id}: {indice_interacao}")
         return indice_interacao
 
@@ -281,8 +303,10 @@ class IndiceInteracaoView(APIView):
 
         for conta in contas:
             # Verifica se o índice de interação já está calculado
+            devedor = conta.devedor
             if conta.i_int is None:  # Verifica se o campo está nulo no banco
                 media_lead = self.calcular_media_lead_por_conta(conta)
+                devedor.lead = self.calcular_media_lead_devedor(devedor)
                 if media_lead is not None:  # Apenas calcula se a média de leads está disponível
                     indice_interacao = self.calcular_indice_interacao(media_lead)
                     conta.i_int = indice_interacao
@@ -301,10 +325,14 @@ class IndiceInteracaoView(APIView):
                 resultado['contas'].append({
                     'conta_id': conta.conta_id,
                     'devedor_id': conta.devedor.devedor_id,
-                    'media_lead': None,  # Não recalcula
+                    'media_lead': conta.media_lead,  # Usa o valor existente no banco
                     'indice_interacao': conta.i_int  # Retorna o valor do banco
                 })
-        
+
+        # Após calcular e salvar a média de lead do devedor
+        if devedor_id:
+            resultado['media_lead_devedor'] = devedor.lead
+
         print(f'\nfinalizou: {datetime.datetime.now()}')
 
         if total_contas > 0:
@@ -316,7 +344,7 @@ class IndiceInteracaoView(APIView):
             return Response(resultado, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Nenhum dado de interação encontrado'}, status=status.HTTP_404_NOT_FOUND)
-        
+
 class IndiceReputacaoView(APIView):
     """
     View para calcular o índice de reputação dos devedores com base nos índices de pagamento, regularidade e interação.
@@ -401,6 +429,10 @@ class IndiceReputacaoView(APIView):
             media_reputacao = total_reputacao / total_contas
             devedor.indice_reputacao = media_reputacao
             devedor.save()  # Salva o índice de reputação do devedor
+            resultado['media_reputacao'] = media_reputacao
+        
+        if  total_contas > 0:
+            media_reputacao = total_reputacao / total_contas
             resultado['media_reputacao'] = media_reputacao
 
         # Atualização para a resposta final

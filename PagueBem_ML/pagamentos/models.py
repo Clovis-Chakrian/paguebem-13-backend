@@ -25,8 +25,8 @@ class Devedor(models.Model):
     email = models.EmailField(unique=True)
     celular = models.CharField(max_length=15, blank=True, null=True)
     telefone = models.CharField(max_length=15, blank=True, null=True)
-    indice_reputacao = models.DecimalField(max_digits=10, decimal_places=2)
-    lead = models.IntegerField()
+    indice_reputacao = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    lead = models.IntegerField(null=True, default=0.00)
 
     def clean(self):
         if self.tipo == TipoPessoa.PESSOA_FISICA:
@@ -47,6 +47,11 @@ class Devedor(models.Model):
             self.nome = None
 
     def save(self, *args, **kwargs):
+        if self.indice_reputacao is None:  # Se por algum motivo não for fornecido, atribui o valor padrão
+            self.indice_reputacao = 0.00  # Você pode ajustar esse valor conforme sua lógica
+        if self.lead is None:  # Se por algum motivo não for fornecido, atribui o valor padrão
+            self.lead = 0.00  # Você pode ajustar esse valor conforme sua lógica
+        self.clean()
         self.clean()  # Chama a validação antes de salvar
         super().save(*args, **kwargs)  # Salva o objeto se tudo estiver válido
 
@@ -118,6 +123,7 @@ class Conta(models.Model):
     credor = models.ForeignKey(Credor, on_delete=models.CASCADE)
     valor_total = models.DecimalField(max_digits=30, decimal_places=2)
     numero_parcelas = models.IntegerField()
+    media_lead = models.FloatField(null=True, blank=True)  # Campo para salvar a média de leads
     i_pag = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de pagamento")
     i_reg = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de regularidade")
     i_int = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True, help_text="Índice de interação")
