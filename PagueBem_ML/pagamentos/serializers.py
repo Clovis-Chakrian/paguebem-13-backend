@@ -2,9 +2,8 @@ from rest_framework import serializers
 from .models import *
 
 class LoginSerializer(serializers.Serializer):
-    class Meta:
-        fields = ['email', 'password']
-        read_only_fields = ['password'] 
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
         
 
 

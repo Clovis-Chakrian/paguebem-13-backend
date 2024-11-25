@@ -8,12 +8,11 @@ urlpatterns = [
 
     path('credores/', CredorListView.as_view(), name='credor-list'),
     path('credores/<int:pk>/', CredorDetailView.as_view(), name='credor-detail'),
-    path('credores/pf/', CredorPFListView.as_view(), name='credor-pf-list'),
-    path('credores/pj/', CredorPJListView.as_view(), name='credor-pj-list'),
-    path('credores/pf/', CredorPFListCreateView.as_view(), name='credor-pf-list-create'),
+    path('credores/pf/', CredorPFListCreateView.as_view(), name='credor-pf-list-create'),  # Combina listagem e criação
     path('credores/pf/<int:pk>/', CredorPFDetailView.as_view(), name='credor-pf-detail'),
-    path('credores/pj/', CredorPJListCreateView.as_view(), name='credor-pj-list-create'),
+    path('credores/pj/', CredorPJListCreateView.as_view(), name='credor-pj-list-create'),  # Combina listagem e criação
     path('credores/pj/<int:pk>/', CredorPJDetailView.as_view(), name='credor-pj-detail'),
+
 
     path('devedores/', DevedorListView.as_view(), name='devedor-list'),
     path('devedor/<int:pk>/', DevedorDetailView.as_view(), name='devedor-detail'),

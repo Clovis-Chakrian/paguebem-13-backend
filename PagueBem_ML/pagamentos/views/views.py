@@ -15,6 +15,9 @@ from drf_yasg.utils import swagger_auto_schema
 
 
 class LoginView(APIView):
+    # permission_classes = [AllowAny]
+
+    @swagger_auto_schema(request_body=LoginSerializer)
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
@@ -39,6 +42,8 @@ class LoginView(APIView):
 
 
 class ContaList(generics.ListCreateAPIView):
+    # permission_classes = [IsAuthenticated]  # Exemplo de autenticação
+
     queryset = Conta.objects.all()
 
     def get_serializer_class(self):
